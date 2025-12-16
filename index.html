@@ -396,6 +396,8 @@
 <body tabindex="-1">
     <video id="bgm" src="forestsound.mp3" autoplay loop playsinline style="display:none"></video>
     <audio id="touchSound" src="touch.mp3" preload="auto"></audio>
+    <audio id="afterSound" src="after.webm" preload="auto"></audio>
+
     <div id="bg"></div>
     <canvas id="ripples"></canvas>
     <canvas id="lines"></canvas>
@@ -713,6 +715,17 @@ function startMainIntro(){
 }
 
 function goNext(){
+
+    /* 🔓 afterSound 오디오 unlock (ENTER 클릭 시) */
+    const afterSound = document.getElementById("afterSound");
+    afterSound.volume = 0;
+    afterSound.play().then(() => {
+        afterSound.pause();
+        afterSound.currentTime = 0;
+    });
+
+    clearInterval(autoRippleInterval);
+
     clearInterval(autoRippleInterval);
     const bg=document.getElementById('bg');
     const intro=document.getElementById('intro');
@@ -846,8 +859,6 @@ creatures.forEach(c => {
         const rect = c.getBoundingClientRect();
         const data = info[c.id];
         const overlay = overlays[c.id];
-
-        // infoBox 생성
         const newBox = infoBox.cloneNode(true);
         document.body.appendChild(newBox);
 
@@ -902,27 +913,43 @@ creatures.forEach(c => {
         fadeBlack.style.transition = "opacity 0.25s ease-out";
         fadeBlack.style.opacity = 1;
 
-        setTimeout(() => {
+setTimeout(() => {
+const afterSound = document.getElementById("afterSound");
 
-            bg.style.background =
-            "linear-gradient(rgba(5,8,6,0.3),rgba(0,0,0,0.6)), url('after.jpg') center/cover no-repeat";
+afterSound.currentTime = 0;
+afterSound.volume = 0;
+afterSound.play();
 
-            document.querySelectorAll('.creature, .shape-overlay').forEach(el => {
-                el.style.transition = "opacity 0.25s ease-out";
-                el.style.opacity = 0;
-});
+let fadeInterval = setInterval(() => {
+    bgm.volume = Math.max(0, bgm.volume - 0.025);
+    afterSound.volume = Math.min(1, afterSound.volume + 0.025);
+    if (bgm.volume === 0 && afterSound.volume === 1) {
+        clearInterval(fadeInterval);
+        bgm.pause();
+    }
+}, 120);
 
-            fadeAfter.style.transition = "opacity 3s ease-out";
-            fadeAfter.style.opacity = 1;
 
-            fadeBlack.style.transition = "opacity 1.2s ease-out";
-            fadeBlack.style.opacity = 0;
+    bg.style.background =
+    "linear-gradient(rgba(5,8,6,0.3),rgba(0,0,0,0.6)), url('after.jpg') center/cover no-repeat";
 
-            setTimeout(() => {
-                fadeAfter.style.opacity = 0;
-            }, 3000);
+    document.querySelectorAll('.creature, .shape-overlay').forEach(el => {
+        el.style.transition = "opacity 0.25s ease-out";
+        el.style.opacity = 0;
+    });
 
-        }, 400);
+    fadeAfter.style.transition = "opacity 3s ease-out";
+    fadeAfter.style.opacity = 1;
+
+    fadeBlack.style.transition = "opacity 1.2s ease-out";
+    fadeBlack.style.opacity = 0;
+
+    setTimeout(() => {
+        fadeAfter.style.opacity = 0;
+    }, 3000);
+
+}, 400);
+
 
         setTimeout(showEnding, 3800);
     }
